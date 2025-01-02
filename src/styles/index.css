@@ -1,0 +1,43 @@
+/* 全局样式 */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+#app {
+  height: 100%;
+}
+
+/* Element Plus 样式覆盖 */
+.el-menu {
+  border-right: none !important;
+}
+
+.el-menu--collapse {
+  width: 64px;
+}
+
+.el-menu-item.is-active {
+  background-color: #263445 !important;
+}
+
+/* 通用样式 */
+.page-container {
+  padding: 20px;
+}
+
+.search-form {
+  margin-bottom: 20px;
+}
+
+.table-operations {
+  margin-bottom: 20px;
+}
+
+.pagination {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
