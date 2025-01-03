@@ -1,57 +1,65 @@
 <template>
   <div class="user-list">
-    <div class="action-bar">
-      <el-button type="primary" @click="handleAdd">
-        <el-icon><Plus /></el-icon>添加用户
-      </el-button>
-    </div>
+    <el-card>
+      <template #header>
+        <div class="card-header">
+          <span>用户管理</span>
+          <el-button type="primary" @click="handleAdd">添加用户</el-button>
+        </div>
+      </template>
 
-    <el-card class="filter-container">
-      <el-form :inline="true" :model="queryParams" @keyup.enter="handleQuery">
+      <!-- 搜索表单 -->
+      <el-form :inline="true" :model="queryParams" class="search-form">
         <el-form-item label="用户名">
-          <el-input v-model="queryParams.username" placeholder="请输入用户名" clearable />
+          <el-input
+            v-model="queryParams.username"
+            placeholder="请输入用户名"
+            clearable
+            @keyup.enter="handleQuery"
+          />
         </el-form-item>
         <el-form-item label="姓名">
-          <el-input v-model="queryParams.name" placeholder="请输入姓名" clearable />
+          <el-input
+            v-model="queryParams.name"
+            placeholder="请输入姓名"
+            clearable
+            @keyup.enter="handleQuery"
+          />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="handleQuery">
-            <el-icon><Search /></el-icon>搜索
-          </el-button>
-          <el-button @click="resetQuery">
-            <el-icon><Refresh /></el-icon>重置
-          </el-button>
+          <el-button type="primary" @click="handleQuery">搜索</el-button>
+          <el-button @click="resetQuery">重置</el-button>
         </el-form-item>
       </el-form>
-    </el-card>
 
-    <el-card class="table-container">
-      <el-table v-loading="loading" :data="userList">
+      <!-- 用户列表 -->
+      <el-table
+        v-loading="loading"
+        :data="userList"
+        style="width: 100%"
+      >
         <el-table-column type="index" label="序号" width="60" />
         <el-table-column prop="username" label="用户名" />
         <el-table-column prop="name" label="姓名" />
         <el-table-column prop="role" label="角色">
           <template #default="{ row }">
-            <el-tag :type="row.role === 'ADMIN' ? 'danger' : 'info'">
-              {{ row.role === 'ADMIN' ? '管理员' : '普通用户' }}
+            <el-tag :type="row.isAdmin ? 'danger' : 'info'">
+              {{ row.isAdmin ? '管理员' : '普通用户' }}
             </el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="email" label="邮箱" />
         <el-table-column prop="createTime" label="创建时间" />
-        <el-table-column label="操作" width="180">
+        <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" link @click="handleEdit(row)">
-              <el-icon><Edit /></el-icon>编辑
-            </el-button>
-            <el-button type="danger" link @click="handleDelete(row)">
-              <el-icon><Delete /></el-icon>删除
-            </el-button>
+            <el-button type="primary" link @click="handleEdit(row)">编辑</el-button>
+            <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
 
-      <div class="pagination-container">
+      <!-- 分页 -->
+      <div class="pagination">
         <el-pagination
           v-model:current-page="queryParams.pageNum"
           v-model:page-size="queryParams.pageSize"
@@ -70,7 +78,6 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Search, Refresh, Edit, Delete } from '@element-plus/icons-vue'
 import { getUserList, deleteUser } from '@/api/user'
 
 const router = useRouter()
@@ -88,12 +95,42 @@ const queryParams = ref({
 const getList = async () => {
   try {
     loading.value = true
-    const { data } = await getUserList(queryParams.value)
-    userList.value = data.records
-    total.value = data.total
+    const params = {
+      page: queryParams.value.pageNum - 1,
+      size: queryParams.value.pageSize,
+      username: queryParams.value.username || undefined,
+      name: queryParams.value.name || undefined
+    }
+    console.log('Search params:', params)
+    const res = await getUserList(params)
+    console.log('API response:', res)
+    
+    if (res.data) {
+      // 处理返回的数据
+      if (Array.isArray(res.data)) {
+        // 如果直接返回数组
+        userList.value = res.data
+        total.value = res.data.length
+      } else if (res.data.content) {
+        // 如果返回分页对象
+        userList.value = res.data.content
+        total.value = res.data.totalElements
+      } else {
+        // 其他情况，尝试直接使用返回数据
+        userList.value = res.data
+        total.value = res.total || res.data.length
+      }
+      console.log('Processed user list:', userList.value)
+    } else {
+      userList.value = []
+      total.value = 0
+      console.log('No data returned from API')
+    }
   } catch (error) {
     console.error('获取用户列表失败:', error)
-    ElMessage.error('获取用户列表失败')
+    ElMessage.error('获取用户列表失败: ' + (error.message || '未知错误'))
+    userList.value = []
+    total.value = 0
   } finally {
     loading.value = false
   }
@@ -162,22 +199,30 @@ onMounted(() => {
 
 <style scoped>
 .user-list {
-  .action-bar {
-    margin-bottom: 20px;
-  }
+  padding: 20px;
+}
 
-  .filter-container {
-    margin-bottom: 20px;
-  }
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
-  .table-container {
-    margin-bottom: 20px;
-  }
+.search-form {
+  margin-bottom: 20px;
+}
 
-  .pagination-container {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 20px;
-  }
+.pagination {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+:deep(.el-card__header) {
+  padding: 15px 20px;
+}
+
+:deep(.el-form--inline .el-form-item) {
+  margin-right: 20px;
 }
 </style> 

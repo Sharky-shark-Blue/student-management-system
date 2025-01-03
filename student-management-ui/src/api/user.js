@@ -2,10 +2,20 @@ import request from '@/utils/request'
 
 // 获取用户列表
 export function getUserList(params) {
+  // 移除值为 undefined 或空字符串的参数
+  const cleanParams = {}
+  Object.keys(params).forEach(key => {
+    if (params[key] !== undefined && params[key] !== '') {
+      cleanParams[key] = params[key]
+    }
+  })
+  
+  console.log('Clean params:', cleanParams)
+  
   return request({
     url: '/api/users',
     method: 'get',
-    params
+    params: cleanParams
   })
 }
 
