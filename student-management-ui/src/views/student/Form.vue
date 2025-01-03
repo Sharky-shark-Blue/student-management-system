@@ -52,6 +52,18 @@
         <el-form-item label="专业" prop="major">
           <el-input v-model="form.major" placeholder="请输入专业" />
         </el-form-item>
+
+        <el-form-item label="电话" prop="phone">
+          <el-input v-model="form.phone" placeholder="请输入电话号码" />
+        </el-form-item>
+
+        <el-form-item label="邮箱" prop="email">
+          <el-input v-model="form.email" placeholder="请输入邮箱地址" />
+        </el-form-item>
+
+        <el-form-item label="地址" prop="address">
+          <el-input v-model="form.address" type="textarea" :rows="2" placeholder="请输入地址" />
+        </el-form-item>
         
         <el-form-item>
           <el-button type="primary" @click="submitForm">确定</el-button>
@@ -84,14 +96,17 @@ const form = ref({
   gender: '男',
   age: 18,
   grade: '',
-  major: ''
+  major: '',
+  phone: '',
+  email: '',
+  address: ''
 })
 
 // 表单验证规则
 const rules = {
   studentNumber: [
     { required: true, message: '请输入学号', trigger: 'blur' },
-    { pattern: /^\d{8}$/, message: '学号必须是8位数字', trigger: 'blur' }
+    { pattern: /^\d{10}$/, message: '学号必须是10位数字', trigger: 'blur' }
   ],
   name: [
     { required: true, message: '请输入姓名', trigger: 'blur' },
@@ -102,13 +117,26 @@ const rules = {
   ],
   age: [
     { required: true, message: '请输入年龄', trigger: 'blur' },
-    { type: 'number', message: '年龄必须为数字', trigger: 'blur' }
+    { type: 'number', message: '年龄必须为数字', trigger: 'blur' },
+    { type: 'number', min: 1, max: 100, message: '年龄必须在1-100之间', trigger: 'blur' }
   ],
   grade: [
     { required: true, message: '请选择年级', trigger: 'change' }
   ],
   major: [
     { required: true, message: '请输入专业', trigger: 'blur' }
+  ],
+  phone: [
+    { required: true, message: '请输入电话号码', trigger: 'blur' },
+    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的11位手机号码', trigger: 'blur' }
+  ],
+  email: [
+    { required: true, message: '请输入邮箱地址', trigger: 'blur' },
+    { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
+  ],
+  address: [
+    { required: true, message: '请输入地址', trigger: 'blur' },
+    { min: 5, max: 100, message: '地址长度在 5 到 100 个字符', trigger: 'blur' }
   ]
 }
 

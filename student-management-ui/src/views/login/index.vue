@@ -1,109 +1,146 @@
 <template>
-  <div class="login-container">
-    <el-card class="login-card">
-      <template #header>
-        <h2 class="login-title">学生管理系统</h2>
-      </template>
-      
-      <el-form
-        ref="loginFormRef"
-        :model="loginForm"
-        :rules="rules"
-        label-width="80px"
-      >
-        <el-form-item label="用户名" prop="username">
-          <el-input v-model="loginForm.username" placeholder="请输入用户名" />
-        </el-form-item>
-        
-        <el-form-item label="密码" prop="password">
-          <el-input
-            v-model="loginForm.password"
-            type="password"
+  <div class="login-page">
+    <div class="login-box">
+      <h2>学生管理系统</h2>
+      <div class="login-form">
+        <div class="form-item">
+          <input 
+            v-model="loginForm.username" 
+            type="text" 
+            placeholder="请输入用户名"
+          >
+        </div>
+        <div class="form-item">
+          <input 
+            v-model="loginForm.password" 
+            type="password" 
             placeholder="请输入密码"
-            show-password
-          />
-        </el-form-item>
-        
-        <el-form-item>
-          <el-button type="primary" @click="handleLogin">登录</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
+          >
+        </div>
+        <div class="form-item">
+          <button 
+            class="login-button"
+            :disabled="loading"
+            @click="handleLogin"
+          >
+            {{ loading ? '登录中...' : '登录' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
 import { login } from '@/api/user'
 
 const router = useRouter()
+const loading = ref(false)
 
-// 表单数据
 const loginForm = ref({
   username: '',
   password: ''
 })
 
-// 表单规则
-const rules = {
-  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
-}
-
-// 表单引用
-const loginFormRef = ref()
-
-// 登录处理
 const handleLogin = async () => {
-  if (!loginFormRef.value) return
+  if (!loginForm.value.username || !loginForm.value.password) {
+    alert('请输入用户名和密码')
+    return
+  }
   
   try {
-    await loginFormRef.value.validate()
+    loading.value = true
     const res = await login(loginForm.value)
     console.log('登录响应:', res)
     
     if (res.code === 200 && res.data) {
-      // 保存token
       const token = res.data.token
       const user = res.data.user
-      console.log('Token:', token)
-      // 确保token包含Bearer前缀
       const tokenWithBearer = token.startsWith('Bearer ') ? token : `Bearer ${token}`
       localStorage.setItem('token', tokenWithBearer)
-      // 保存用户信息
       localStorage.setItem('userInfo', JSON.stringify(user))
-      
-      // 登录成功后跳转到首页
-      ElMessage.success('登录成功')
       router.push('/student')
     } else {
-      ElMessage.error(res.message || '登录失败')
+      alert(res.message || '登录失败')
     }
   } catch (error) {
     console.error('登录失败:', error)
-    ElMessage.error('登录失败，请重试')
+    alert('登录失败，请重试')
+  } finally {
+    loading.value = false
   }
 }
 </script>
 
 <style scoped>
-.login-container {
+.login-page {
+  height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  background-color: #f5f7fa;
+  background: linear-gradient(135deg, #1f4037 0%, #99f2c8 100%);
 }
 
-.login-card {
-  width: 400px;
+.login-box {
+  background: white;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  width: 350px;
 }
 
-.login-title {
+h2 {
   text-align: center;
-  margin: 0;
   color: #409eff;
+  margin-bottom: 30px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-item {
+  width: 100%;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: all 0.3s;
+  box-sizing: border-box;
+}
+
+input:focus {
+  outline: none;
+  border-color: #409eff;
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+}
+
+.login-button {
+  width: 100%;
+  padding: 12px;
+  background-color: #409eff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.login-button:hover {
+  background-color: #66b1ff;
+}
+
+.login-button:disabled {
+  background-color: #a0cfff;
+  cursor: not-allowed;
 }
 </style> 
